@@ -3,71 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouPlay 6.0 - Canais & Login</title>
+    <title>YouPlay 7.0 - Home & Shorts</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
         :root { --plyr-color-main: #ff0000; }
-        body { background: #000; color: white; font-family: 'Inter', sans-serif; }
-        .video-card:hover { background: #111; border-color: #333; }
-        .custom-scroll::-webkit-scrollbar { display: none; }
+        body { background: #000; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .short-container { scroll-snap-type: y mandatory; overflow-y: scroll; height: calc(100vh - 70px); }
+        .short-card { scroll-snap-align: start; height: calc(100vh - 70px); position: relative; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
 
-    <nav class="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10 p-4">
+    <nav class="fixed top-0 w-full z-[100] bg-black/60 backdrop-blur-xl border-b border-white/10 p-4">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-2 cursor-pointer" onclick="loadVideos()">
-                <div class="bg-red-600 p-1.5 rounded"><i class="fas fa-play text-white text-xs"></i></div>
-                <span class="font-black uppercase tracking-tighter italic">YouPlay 6.0</span>
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="showSection('home')">
+                    <div class="bg-red-600 p-1 rounded"><i class="fas fa-play text-[10px]"></i></div>
+                    <span class="font-black italic uppercase">YouPlay</span>
+                </div>
+                <div class="hidden md:flex gap-6 text-sm font-bold text-zinc-400">
+                    <button onclick="showSection('home')" class="hover:text-white transition">Início</button>
+                    <button onclick="showSection('shorts')" class="hover:text-white transition text-red-500"><i class="fas fa-bolt mr-1"></i> Shorts</button>
+                    <button onclick="showSection('library')" class="hover:text-white transition">Biblioteca</button>
+                </div>
             </div>
-            
-            <div id="userControls" class="flex gap-4 items-center">
-                <button onclick="openAuth()" class="text-sm font-bold bg-white text-black px-4 py-1.5 rounded-full">Entrar</button>
-            </div>
+            <div id="userArea" class="flex gap-4 items-center">
+                </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto p-4 flex flex-col lg:flex-row gap-8">
-        <div class="flex-1">
-            <div class="rounded-2xl overflow-hidden border border-white/10 aspect-video">
-                <video id="player" playsinline controls></video>
+    <section id="section-home" class="pt-20">
+        <div class="relative h-[60vh] w-full flex items-center p-8 md:p-20 overflow-hidden">
+            <div id="hero-bg" class="absolute inset-0 bg-cover bg-center opacity-40 scale-105 blur-sm transition-all duration-700"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
+            <div class="relative z-10 max-w-2xl">
+                <span class="text-red-600 font-black tracking-[4px] text-xs uppercase">Destaque do Dia</span>
+                <h1 id="hero-title" class="text-4xl md:text-6xl font-black mt-2 mb-4">A carregar...</h1>
+                <p id="hero-desc" class="text-zinc-400 mb-8 line-clamp-3">Explore os melhores vídeos da comunidade YouPlay.</p>
+                <button onclick="playHero()" class="bg-white text-black px-8 py-3 rounded-full font-black hover:scale-105 transition flex items-center gap-3">
+                    <i class="fas fa-play"></i> ASSISTIR AGORA
+                </button>
             </div>
-            <h1 id="mainTitle" class="text-2xl font-bold mt-4">Explorar vídeos recentes</h1>
         </div>
 
-        <div class="w-full lg:w-80 flex flex-col gap-6">
-            <div class="bg-zinc-900/50 p-4 rounded-2xl border border-white/5">
-                <h3 class="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Canais Populares</h3>
-                <div id="channelList" class="flex flex-col gap-2"></div>
+        <div class="p-8">
+            <h3 class="text-xl font-bold mb-6">Novidades</h3>
+            <div id="home-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+        </div>
+    </section>
+
+    <section id="section-shorts" class="hidden pt-[70px] bg-black">
+        <div id="shorts-container" class="short-container hide-scroll">
             </div>
+    </section>
+
+    <section id="section-library" class="hidden pt-24 p-8 max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+                <div class="rounded-3xl overflow-hidden border border-white/10 aspect-video bg-black">
+                    <video id="main-player" playsinline controls></video>
+                </div>
+                <h2 id="player-title" class="text-3xl font-bold mt-6">Escolha um vídeo</h2>
+            </div>
+            <div id="library-grid" class="flex flex-col gap-4 overflow-y-auto max-h-[70vh] hide-scroll"></div>
+        </div>
+    </section>
+
+    <div id="uploadModal" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center z-[200] p-4">
+        <div class="bg-zinc-900 p-8 rounded-[2.5rem] border border-white/10 w-full max-w-md">
+            <h2 class="text-2xl font-black mb-6 text-center italic">UPLOAD</h2>
+            <input type="file" id="fileIn" accept="video/*" class="mb-4 w-full text-sm text-zinc-500">
+            <input type="text" id="titleIn" placeholder="Título" class="w-full bg-black p-4 rounded-2xl mb-4 border border-zinc-800">
             
-            <h3 class="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Próximos Vídeos</h3>
-            <div id="sideGrid" class="flex flex-col gap-3 custom-scroll overflow-y-auto max-h-[60vh]"></div>
-        </div>
-    </main>
+            <div class="flex items-center gap-3 mb-6 bg-black/40 p-4 rounded-2xl border border-zinc-800">
+                <input type="checkbox" id="isShortIn" class="w-5 h-5 accent-red-600">
+                <label for="isShortIn" class="text-sm font-bold">Este vídeo é um SHORT? (Vertical)</label>
+            </div>
 
-    <div id="authModal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4">
-        <div class="bg-zinc-900 p-8 rounded-3xl border border-white/10 w-full max-w-sm">
-            <h2 id="authTitle" class="text-xl font-bold mb-4">Login no Canal</h2>
-            <input type="text" id="userIn" placeholder="Utilizador" class="w-full bg-black p-3 rounded-xl mb-3 border border-zinc-800">
-            <input type="password" id="passIn" placeholder="Password" class="w-full bg-black p-3 rounded-xl mb-3 border border-zinc-800">
-            <input type="text" id="chanIn" placeholder="Nome do Canal (Para Registo)" class="w-full bg-black p-3 rounded-xl mb-6 border border-zinc-800">
-            <button onclick="handleAuth('login')" class="w-full bg-red-600 py-3 rounded-xl font-bold mb-2">Entrar</button>
-            <button onclick="handleAuth('register')" class="w-full bg-zinc-800 py-3 rounded-xl font-bold text-sm">Criar Novo Canal</button>
-            <button onclick="openAuth(false)" class="w-full mt-4 text-zinc-500 text-xs">Sair</button>
-        </div>
-    </div>
-
-    <div id="uploadModal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4">
-        <div class="bg-zinc-900 p-8 rounded-3xl border border-white/10 w-full max-w-sm text-center">
-            <h2 class="text-xl font-bold mb-6 italic">Publicar Vídeo</h2>
-            <input type="file" id="fileIn" accept="video/*" class="mb-4 text-sm text-zinc-500">
-            <input type="text" id="titleIn" placeholder="Título do vídeo" class="w-full bg-black p-3 rounded-xl mb-6 border border-zinc-800">
-            <button onclick="uploadVideo()" id="upBtn" class="w-full bg-red-600 py-3 rounded-xl font-bold">Subir para Nuvem</button>
-            <button onclick="document.getElementById('uploadModal').classList.add('hidden')" class="mt-4 text-zinc-500">Cancelar</button>
+            <button onclick="uploadVideo()" id="upBtn" class="w-full bg-red-600 py-4 rounded-2xl font-black shadow-lg shadow-red-600/20">PUBLICAR NA NUVEM</button>
+            <button onclick="document.getElementById('uploadModal').classList.add('hidden')" class="w-full mt-4 text-zinc-500 font-bold">CANCELAR</button>
         </div>
     </div>
 
@@ -76,90 +94,118 @@
         let plyr, allVideos = [], currentUser = JSON.parse(localStorage.getItem('user'));
 
         window.onload = () => {
-            plyr = new Plyr('#player');
-            loadVideos();
-            updateUI();
+            plyr = new Plyr('#main-player');
+            loadContent();
+            updateHeader();
         };
 
-        async function loadVideos() {
+        async function loadContent() {
             const res = await fetch(`${API}/videos`);
             allVideos = await res.json();
-            renderVideos(allVideos);
-            renderChannels();
+            
+            renderHome();
+            renderLibrary();
+            renderShorts();
         }
 
-        function renderVideos(list) {
-            const grid = document.getElementById('sideGrid');
-            grid.innerHTML = list.map(v => `
-                <div class="video-card flex gap-3 p-2 rounded-xl transition border border-transparent cursor-pointer group" onclick="playVideo('${v.url}', '${v.title}')">
-                    <img src="${v.thumbnail}" class="w-28 h-16 object-cover rounded-lg bg-zinc-800">
-                    <div class="flex-1 min-w-0">
-                        <h4 class="text-xs font-bold truncate">${v.title}</h4>
-                        <p class="text-[10px] text-red-600 font-bold mt-1 uppercase">${v.author || 'Público'}</p>
+        function showSection(name) {
+            ['home', 'shorts', 'library'].forEach(s => document.getElementById(`section-${s}`).classList.add('hidden'));
+            document.getElementById(`section-${name}`).classList.remove('hidden');
+            if(name === 'shorts') window.scrollTo(0,0);
+        }
+
+        function renderHome() {
+            const normalVideos = allVideos.filter(v => !v.isShort);
+            if(normalVideos.length > 0) {
+                const hero = normalVideos[0];
+                document.getElementById('hero-title').innerText = hero.title;
+                document.getElementById('hero-bg').style.backgroundImage = `url('${hero.thumbnail}')`;
+            }
+
+            document.getElementById('home-grid').innerHTML = normalVideos.map(v => `
+                <div class="group cursor-pointer" onclick="playNow('${v.url}', '${v.title}')">
+                    <div class="relative aspect-video rounded-xl overflow-hidden mb-2 border border-white/5">
+                        <img src="${v.thumbnail}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition"></div>
+                    </div>
+                    <h4 class="text-sm font-bold truncate">${v.title}</h4>
+                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${v.author || 'YouPlay'}</p>
+                </div>
+            `).join('');
+        }
+
+        function renderShorts() {
+            const shorts = allVideos.filter(v => v.isShort);
+            document.getElementById('shorts-container').innerHTML = shorts.map(s => `
+                <div class="short-card bg-zinc-900">
+                    <video src="${s.url}" class="w-full h-full object-cover" loop onclick="this.paused ? this.play() : this.pause()"></video>
+                    <div class="absolute bottom-10 left-6 right-20">
+                        <span class="bg-red-600 px-2 py-1 rounded text-[8px] font-black uppercase">Short</span>
+                        <h3 class="text-xl font-bold mt-2 shadow-black drop-shadow-lg">${s.title}</h3>
+                        <p class="text-sm opacity-80 mt-1">@${s.author}</p>
+                    </div>
+                    <div class="absolute bottom-10 right-4 flex flex-col gap-6 items-center">
+                        <button class="flex flex-col items-center"><i class="fas fa-heart text-2xl"></i><span class="text-[10px] mt-1">Like</span></button>
+                        <button class="flex flex-col items-center"><i class="fas fa-comment text-2xl"></i><span class="text-[10px] mt-1">12</span></button>
+                        <button class="flex flex-col items-center"><i class="fas fa-share text-2xl"></i><span class="text-[10px] mt-1">Share</span></button>
                     </div>
                 </div>
             `).join('');
         }
 
-        function renderChannels() {
-            const channels = [...new Set(allVideos.map(v => v.author))].filter(Boolean);
-            document.getElementById('channelList').innerHTML = channels.map(c => `
-                <div onclick="filterByChannel('${c}')" class="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer transition">
-                    <div class="w-6 h-6 bg-zinc-800 rounded-full flex items-center justify-center text-[10px] font-bold">${c[0]}</div>
-                    <span class="text-xs font-medium">${c}</span>
+        function renderLibrary() {
+            const normalVideos = allVideos.filter(v => !v.isShort);
+            document.getElementById('library-grid').innerHTML = normalVideos.map(v => `
+                <div class="flex gap-4 p-2 hover:bg-white/5 rounded-2xl transition cursor-pointer" onclick="playNow('${v.url}', '${v.title}')">
+                    <img src="${v.thumbnail}" class="w-32 h-20 object-cover rounded-xl">
+                    <div>
+                        <h4 class="text-sm font-bold line-clamp-2">${v.title}</h4>
+                        <p class="text-xs text-zinc-500 mt-1">${v.author}</p>
+                    </div>
                 </div>
             `).join('');
         }
 
-        function playVideo(url, title) {
+        function playNow(url, title) {
+            showSection('library');
             plyr.source = { type: 'video', sources: [{ src: url }] };
-            document.getElementById('mainTitle').innerText = title;
+            document.getElementById('player-title').innerText = title;
             plyr.play();
-            window.scrollTo(0,0);
         }
 
-        function filterByChannel(name) {
-            renderVideos(allVideos.filter(v => v.author === name));
-            document.getElementById('mainTitle').innerText = `Canal: ${name}`;
-        }
-
-        function openAuth(show = true) { document.getElementById('authModal').classList.toggle('hidden', !show); }
-
-        async function handleAuth(type) {
-            const data = { username: userIn.value, password: passIn.value, channelName: chanIn.value };
-            const res = await fetch(`${API}/auth/${type}`, { 
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
-            });
-            const result = await res.json();
-            if (res.ok && type === 'login') {
-                localStorage.setItem('user', JSON.stringify(result));
-                location.reload();
-            } else alert(result.message || result.error);
-        }
-
-        function updateUI() {
-            if (currentUser) {
-                userControls.innerHTML = `
-                    <span class="text-xs font-bold text-zinc-400">@${currentUser.channel}</span>
-                    <button onclick="document.getElementById('uploadModal').classList.remove('hidden')" class="bg-red-600 p-2 rounded-full w-8 h-8"><i class="fas fa-plus text-xs"></i></button>
-                    <button onclick="localStorage.clear(); location.reload()" class="text-zinc-500"><i class="fas fa-sign-out-alt"></i></button>
-                `;
-            }
+        function playHero() {
+            const heroVideo = allVideos.filter(v => !v.isShort)[0];
+            if(heroVideo) playNow(heroVideo.url, heroVideo.title);
         }
 
         async function uploadVideo() {
             const file = fileIn.files[0];
-            if (!file) return;
-            upBtn.innerText = "A Enviar...";
+            if(!file) return alert("Selecione o vídeo");
+            upBtn.innerText = "A ENVIAR...";
+            upBtn.disabled = true;
+
             const thumb = await generateThumb(URL.createObjectURL(file));
             const fd = new FormData();
             fd.append('video', file);
             fd.append('title', titleIn.value || file.name);
             fd.append('thumbnail', thumb);
             fd.append('author', currentUser ? currentUser.channel : "Anónimo");
+            fd.append('isShort', isShortIn.checked);
 
             await fetch(`${API}/videos`, { method: 'POST', body: fd });
             location.reload();
+        }
+
+        function updateHeader() {
+            const area = document.getElementById('userArea');
+            if(currentUser) {
+                area.innerHTML = `
+                    <button onclick="document.getElementById('uploadModal').classList.remove('hidden')" class="bg-red-600 w-10 h-10 rounded-full flex items-center justify-center shadow-lg shadow-red-600/40"><i class="fas fa-plus"></i></button>
+                    <div class="w-10 h-10 bg-zinc-800 rounded-full border border-white/10 flex items-center justify-center font-bold text-xs">${currentUser.channel[0]}</div>
+                `;
+            } else {
+                area.innerHTML = `<button onclick="showSection('home')" class="bg-white text-black px-6 py-2 rounded-full font-bold text-sm">Entrar</button>`;
+            }
         }
 
         function generateThumb(url) {
@@ -168,8 +214,8 @@
                 v.src = url; v.currentTime = 2;
                 v.onloadeddata = () => {
                     const c = document.createElement('canvas');
-                    c.width = 320; c.height = 180;
-                    c.getContext('2d').drawImage(v, 0, 0, 320, 180);
+                    c.width = 400; c.height = 225;
+                    c.getContext('2d').drawImage(v, 0, 0, 400, 225);
                     res(c.toDataURL('image/jpeg', 0.6));
                 }
             });
